@@ -41,11 +41,9 @@ user2.name // Имярек
 
 class User3 {
   #name
-
   constructor(name) {
       this.#name = name
   }
-
   getName() {
       return this.#name
   }
