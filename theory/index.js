@@ -116,3 +116,218 @@ let duck4 = new Bird4("Donald");
 // duck наследует свой прототип от функции-конструктора Bird. Вы можете показать эту связь с помощью метода isPrototypeOf:
 
 Bird4.prototype.isPrototypeOf(duck4); // true
+
+
+// Используй наследование, чтобы не повторяться
+
+// В программировании есть принцип «Не повторяйся» (DRY). Причина, по которой повторяющийся код является проблемой, заключается в том, что любое изменение требует исправления кода в нескольких местах. Это означает больше работы для программистов и больше места для ошибок.
+
+// в приведенном ниже примере метод описания является общим для Bird и Dog:
+
+Bird5.prototype = {
+  constructor: Bird5,
+  describe: function() {
+    console.log("My name is " + this.name);
+  }
+};
+
+Dog5.prototype = {
+  constructor: Dog5,
+  describe: function() {
+    console.log("My name is " + this.name);
+  }
+};
+
+// Описание метода повторяется в 2 местах. Код можно отредактировать, создав родитель с именем Animal:
+function Animal() { };
+
+Animal.prototype = {
+  constructor: Animal, 
+  describe: function() {
+    console.log("My name is " + this.name);
+  }
+};
+
+Bird.prototype = {
+  constructor: Bird
+};
+
+Dog.prototype = {
+  constructor: Dog
+};
+
+
+// Наследовать поведение от родителя
+// Object.create(obj) создает новый объект и устанавливает obj в качестве прототипа нового объекта. Напомним, что прототип — это как бы «рецепт» созд. объекта. Установив прототип животного в качестве прототипа животного, вы фактически даете экземпляру животного тот же «рецепт», что и любому др. экземпляру животного.
+function Animal2() { }
+Animal2.prototype.eat = function() {
+  console.log("nom nom nom");
+};
+
+let animal = Object.create(Animal2.prototype);
+
+animal instanceof Animal; // true
+
+
+// Установи дочерний прототип в экземпляр родителя
+function Animal3() { }
+
+Animal3.prototype = {
+  constructor: Animal3,
+  eat: function() {
+    console.log("nom nom nom");
+  }
+};
+
+Bird6.prototype = Object.create(Animal3.prototype); // установливаю прототип подтипа (или потомка) — в данном случае Bird — в качестве экземпляра Animal.
+
+let duck2 = new Bird6("Donald"); // duck наследует все свойства класса Animal, включая метод eat.
+duck2.eat();
+
+
+// Сбросить унаследованное свойство конструктора
+
+// Когда объект наследует свой прототип от др. объекта, он также наследует св-во конструктора родителя.
+// duck и все экземпляры Bird должны показывать, что они были созданы Bird, а не Animal. Для этого можно вручную установить св-во конструктора Bird в объект Bird:
+function Bird6() { }
+Bird6.prototype = Object.create(Animal3.prototype);
+
+Bird6.prototype.constructor = Bird6;
+
+let duck3 = new Bird6();
+
+
+// Добавляем методы после наследования
+function Animal4() { }
+Animal4.prototype.eat = function() { 
+  console.log("nom nom nom"); 
+};
+function Dog() { }
+
+Dog.prototype = Object.create(Animal4.prototype); // Dog наследуется от Animal
+Dog.prototype.constructor = Dog; // конструктор прототипа Dog установлен на Dog
+Dog.prototype.bark = function() { // добавление метода bark
+  console.log('Woof!')
+}
+
+let beagle = new Dog();
+
+beagle.eat();
+beagle.bark();
+
+
+// Переопределить унаследованные методы
+function Animal5() { }
+Animal5.prototype.eat = function() {
+  return "nom nom nom";
+};
+function Bird7() { }
+
+Bird7.prototype = Object.create(Animal5.prototype);
+
+Bird7.prototype.eat = function() { // переопределение
+  return "peck peck peck";
+};
+
+let duck5 = new Bird7();
+duck5.eat(); // "peck peck peck"
+
+// Как JS видет цепочку?
+// duck => Здесь определено eat()? Нет. 
+// Bird => Здесь определено eat()? => Да. Выполните его и прекратите поиск. 
+// Animal => eat() также определен, но JS остановил поиск до достижения этого уровня. 
+// Объект => JavaScript прекратил поиск до достижения этого уровня.
+
+
+// Миксин для добавления общего поведения между несвязанными объектами
+
+// Наследование плохо работает для несвязанных объектов, таких как Bird и Airplane. Они оба могут летать, но Птица не является типом Самолета и наоборот.
+// Для несвязанных объектов лучше использовать примеси. Mixin позволяет другим объектам использовать набор функций
+
+let flyMixin = function(obj) {  // lyMixin берет любой объект и дает ему метод fly
+  obj.fly = function() {
+    console.log("Flying, wooosh!");
+  }
+};
+
+let bird = {
+  name: "Donald",
+  numLegs: 2
+};
+
+let plane = {
+  model: "777",
+  numPassengers: 524
+};
+
+flyMixin(bird);  // передаются в flyMixin, который затем назначает функцию полета объекту
+flyMixin(plane);
+
+// Теперь и птица, и самолет могут летать
+
+bird.fly(); // Flying, wooosh!
+plane.fly();  // Flying, wooosh!
+
+// миксин позволяет повторно использовать один и тот же метод fly для несвязанных объектов birds и plane
+
+
+// Используй замыкание для защиты свойств внутри объекта от внешнего изменения
+
+// Самый простой способ сделать это общедоступное св-во частным — созд. переменную в функции-конструкторе. Это изменяет область действия этой переменной, чтобы она находилась внутри функции кон-ра, а не была доступна глобально. Таким образом, переменная может быть доступна и изменена только методами внутри функции-конструктора.
+
+function Bird8() {
+  let hatchedEgg = 10; // закрытая переменная
+
+  this.getHatchedEggCount = function() { 
+    return hatchedEgg;
+  };
+}
+let ducky = new Bird8();
+ducky.getHatchedEggCount();
+
+// В JavaScript функция всегда имеет доступ к контексту, в котором она была создана. Это называется закрытием.
+
+
+// Понимание выражения немедленно вызываемой функции (IIFE)
+
+(function () {
+  console.log("Chirp, chirp!");
+})();
+
+// Это анонимное функ-ное выражение, которое выполняется сразу же и выводит чирп, чирп! немедленно. Функция не имеет имени и не хранится в переменной. Две круглые скобки () в конце функ-ного выражения заставляют его немедленно выполняться или вызываться. Этот шаблон известен как немедленно вызываемое функциональное выражение или IIFE (Immediately Invoked Function Expression)
+
+
+// Используем IIFE для создания модуля
+
+function glideMixin(obj) {
+  obj.glide = function() {
+    console.log("Gliding on the water");
+  };
+}
+function flyMixin(obj) {
+  obj.fly = function() {
+    console.log("Flying, wooosh!");
+  };
+}
+
+// сгруппируем эти миксины в модуль:
+
+let motionModule = (function () {
+  return {
+    glideMixin: function(obj) {
+      obj.glide = function() {
+        console.log("Gliding on the water");
+      };
+    },
+    flyMixin: function(obj) {
+      obj.fly = function() {
+        console.log("Flying, wooosh!");
+      };
+    }
+  }
+})();
+
+// немедленно вызываемое функциональное выражение (IIFE), которое возвращает объект motionModule. Этот возвр. объект содержит все варианты поведения примесей как сво-ва объекта. Преимущество модульного шаблона заключается в том, что все поведения движения могут быть упакованы в один объект, который затем может использоваться другими частями вашего кода. Вот пример его использования:
+
+// motionModule.glideMixin(duck);
+// duck.glide();
